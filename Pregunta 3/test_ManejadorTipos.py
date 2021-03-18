@@ -24,7 +24,7 @@ class Test_Manejador_Tipos(unittest.TestCase):
     #Probar funcion "crear_reg_o_reg_var", verificamos si el struct creado es
     #una instancia de Registro
     def test__prueba3_crear2_reg_o_reg_var_1(self):
-        accion = "STRUCT struct bool"
+        accion = "struct struct bool"
         accion = accion.split(" ")
         crear_reg_o_reg_var(accion)
         self.assertIsInstance(reg_structs["struct"], Registro)
@@ -37,10 +37,10 @@ class Test_Manejador_Tipos(unittest.TestCase):
         crear_reg_o_reg_var(accion)
         self.assertIsInstance(reg_var_unions["union"], RegistroVariante)
 
-    #Probar funcion "crear_reg_o_reg_var" para un caso donde el el struct que vamos a
+    #Probar funcion "crear_reg_o_reg_var" para un caso donde el struct que vamos a
     #crear tiene un tipo atomico que no fue definido
     def test__prueba5_crear3_reg_o_reg_var_3_error(self):
-        accion = "STRUCT struct1 bool int"
+        accion = "struct struct1 bool int"
         accion = accion.split(" ")
         no_lo_crea = crear_reg_o_reg_var(accion)
         self.assertFalse(no_lo_crea)
@@ -80,7 +80,7 @@ class Test_Manejador_Tipos(unittest.TestCase):
         accion_bool = accion_bool.split(" ")
         crear_tipo_atomico(accion_bool)
 
-        accion = "STRUCT struct6 bool"
+        accion = "struct struct6 bool"
         accion = accion.split(" ")
         crear_reg_o_reg_var(accion)
        
@@ -114,11 +114,11 @@ class Test_Manejador_Tipos(unittest.TestCase):
         accion = accion.split(" ")
         crear_tipo_atomico(accion)
 
-        accion1 = "STRUCT s1 bool"
+        accion1 = "struct s1 bool"
         accion1 = accion1.split(" ")
         crear_reg_o_reg_var(accion1)
 
-        accion2 = "STRUCT s2 s1 bool"
+        accion2 = "struct s2 s1 bool"
         accion2 = accion2.split(" ")
         crear_reg_o_reg_var(accion2) 
         
@@ -139,17 +139,17 @@ class Test_Manejador_Tipos(unittest.TestCase):
         accion_union = accion_union.split(" ")
         crear_reg_o_reg_var(accion_union)
 
-        accion1 = "STRUCT s3 bool"
+        accion1 = "struct s3 bool"
         accion1 = accion1.split(" ")
         crear_reg_o_reg_var(accion1)
 
-        accion2 = "STRUCT s4 s3 char"
+        accion2 = "struct s4 s3 char"
         accion2 = accion2.split(" ")
         crear_reg_o_reg_var(accion2) 
         
         esperado = anidamiento(accion2)
 
-        accion3 = "STRUCT s5 s4 unioncita"
+        accion3 = "struct s5 s4 unioncita"
         accion3 = accion3.split(" ")  
         
         esperado = anidamiento(accion3)
@@ -210,70 +210,76 @@ class Test_Manejador_Tipos(unittest.TestCase):
         with patch('sys.stdout', new=StringIO()) as mocked_stdout:
             describir("prueba")
             output = mocked_stdout.getvalue()
-        #Resultados esperados
-        expected_output = "Tipos del registro variante:"
-        self.assertTrue(expected_output in output)
+        
+        grafica = "| float | bool |"
+        tipo1 = "Tipo Atomico: float; Representacion: 8 bytes; Alineacion: 8 bytes."
+        tipo2 = "Tipo Atomico: bool; Representacion: 1 bytes; Alineacion: 2 bytes."
+        self.assertTrue(grafica in output and tipo1 in output and tipo2 in output)
 
+    #Prueba de describir un structcon un union
     def test_prueba18(self):
-        crear_reg_o_reg_var("STRUCT prueba2 bool prueba".split(" "))
+        crear_reg_o_reg_var("struct prueba2 bool prueba".split(" "))
         with patch('sys.stdout', new=StringIO()) as mocked_stdout:
             describir("prueba2")
             output = mocked_stdout.getvalue()
-        print(output)
             
-        #Resultados esperados
-        empaquetado = "Registro (Struct) Empaquetado"
-        no_empaquetado =  "Registro (Struct) Sin Empaquetar"
-        optimizado = "Registro (Struct) Optimizado"
-        #Verificamos que el output contenga los strings de los resultados esperados
-        self.assertFalse(empaquetado in output and no_empaquetado in output and optimizado in output)
+        empaquetado = "Registro (Struct) Empaquetado, Ocupacion: 9 bytes; Desperdicio: 0 bytes."
+        sin_empaquetar =  "Registro (Struct) Sin Empaquetar, Ocupacion: 16 bytes; Desperdicio: 7 bytes."
+        optimizado = "Registro (Struct) Optimizado, Ocupacion: 9 bytes; Desperdicio: 0 bytes."
 
-    #Crearemos ahora un union con otro union dentro y otro struct. En este caso veremos que ocurre si el struct esta empaquetado
-    #No empaquetado y optimizado
+        self.assertTrue(empaquetado in output and sin_empaquetar in output and optimizado in output)
+
+
+    #Prueba error al describir un union
     def test_prueba19(self):
         crear_tipo_atomico("ATOMICO random 2 3".split(" "))
         crear_reg_o_reg_var("UNION prueba3 random prueba2".split(" "))
         with patch('sys.stdout', new=StringIO()) as mocked_stdout:
             describir("prueba3")
             output = mocked_stdout.getvalue()
-        print(output)
         
-        #Resultados esperados
-        esperado1 = "Registro Variante (Union)"
-        esperado2 =  "Tipos del registro variante:"
-        esperado3 = "Registro Variante (Union) Interno"
-        esperado4 = "Registro (Struct) Interno,"
-        esperado5 = "Representacion grafica del Struct Interno:"
-        #Verificamos que el output contenga los strings de los resultados esperados
-        self.assertFalse(esperado1 in output and esperado2 in output and esperado3 in output and esperado4 in output and esperado5 in output)
+        esperado5 = "ERROR: El nombre <prueba3>, no es de un tipo previamente definido."
+
+        self.assertIn(esperado5,output)
     
+    #Prueba de describir otro struct
     def test_prueba20(self):
         crear_tipo_atomico("ATOMICO jota 5 7".split(" "))
         crear_tipo_atomico("UNION uni jota int".split(" "))
-        crear_reg_o_reg_var("STRUCT prueba4 jota int".split(" "))
+        crear_reg_o_reg_var("struct prueba4 jota int".split(" "))
         with patch('sys.stdout', new=StringIO()) as mocked_stdout:
             describir("prueba4")
             output = mocked_stdout.getvalue()
+            
+        empaquetado = "Registro (Struct) Empaquetado, Ocupacion: 9 bytes; Desperdicio: 0 bytes."
+        sin_empaquetar =  "Registro (Struct) Sin Empaquetar, Ocupacion: 12 bytes; Desperdicio: 3 bytes."
+        optimizado = "Registro (Struct) Optimizado, Ocupacion: 12 bytes; Desperdicio: 3 bytes."
+        
+        self.assertTrue(empaquetado in output and sin_empaquetar in output and optimizado in output) 
 
-        empaquetado = "Registro (Struct) Empaquetado"
-        no_empaquetado =  "Registro (Struct) Sin Empaquetar"
-        optimizado = "Registro (Struct) Optimizado"
-        print(output)
-        #Verificamos que el output contenga los strings de los resultados esperados
-        self.assertFalse(empaquetado in output and no_empaquetado in output and optimizado in output)
-
+    #Prueba de describir un struct que tiene otro struct dentro
     def test_prueba21(self):
-        crear_reg_o_reg_var("STRUCT prueba5 prueba4 jota random".split(" "))
+        crear_reg_o_reg_var("struct prueba5 prueba4 jota random".split(" "))
         with patch('sys.stdout', new=StringIO()) as mocked_stdout:
             describir("prueba5")
             output = mocked_stdout.getvalue()
 
-        empaquetado = "Registro (Struct) Empaquetado"
-        no_empaquetado =  "Registro (Struct) Sin Empaquetar"
-        optimizado = "Registro (Struct) Optimizado"
-        print(output)
+        empaquetado = "Registro (Struct) Empaquetado, Ocupacion: 16 bytes; Desperdicio: 0 bytes."
+        sin_empaquetar =  "Registro (Struct) Sin Empaquetar, Ocupacion: 25 bytes; Desperdicio: 9 bytes."
+        optimizado = "Registro (Struct) Optimizado, Ocupacion: 22 bytes; Desperdicio: 6 bytes."
         
-        self.assertFalse(empaquetado in output and no_empaquetado in output and optimizado in output)  
+        self.assertTrue(empaquetado in output and sin_empaquetar in output and optimizado in output) 
+    
+    #Prueba de describir un struct que no esta previamente definido
+    def test_prueba22(self):
+        crear_reg_o_reg_var("struct prueba6 jota random".split(" "))
+        with patch('sys.stdout', new=StringIO()) as mocked_stdout:
+            describir("prueba7")
+            output = mocked_stdout.getvalue()
+
+        esperado = "ERROR: El nombre <prueba7>, no es de un tipo previamente definido."
+        
+        self.assertIn(esperado,output) 
 
 if __name__ == '__main__':
     unittest.main()
