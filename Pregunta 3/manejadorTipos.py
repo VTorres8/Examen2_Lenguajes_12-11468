@@ -117,7 +117,7 @@ def crear_reg_o_reg_var(accion):
                 lista_tipos_objetos.append(reg_var_unions[tipo])
 
         #Si la accion que realizamos es STRUCT
-        if(accion[0] == "struct"):
+        if(accion[0].lower() == "struct"):
 
             #Creamos el objeto Registro del nuevo Struct que estamos creando/definiendo
             registro = Registro(accion[1], lista_tipos_objetos)
